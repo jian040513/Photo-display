@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="theme-color" content="#04050a" />
+<title>3D 照片墙 · 送给亲爱的你</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+
+  <header class="stage-head">
+    <h1 id="title">2026 Happy New Year</h1>
+    <p id="subtitle">送给亲爱的你</p>
+  </header>
+
+  <div class="dock">
+    <div class="dock-main">
+      <button class="pill" id="btn-scatter" data-act="scatter">散开</button>
+      <button class="pill active" id="btn-gather" data-act="gather">聚合</button>
+    </div>
+    <div class="dock-tools">
+      <button class="tool" id="btn-prev" title="上一张">‹ 上一张</button>
+      <button class="tool" id="btn-next" title="下一张">下一张 ›</button>
+      <span class="sep"></span>
+      <button class="tool" id="btn-hand" title="摄像头手势（H）"><span class="ico">✋</span><span id="txt-hand">手势</span></button>
+      <button class="tool" id="btn-help" title="手势使用说明（?）"><span class="ico">?</span>说明</button>
+      <button class="tool" id="btn-set" title="设置"><span class="ico">⚙</span>设置</button>
+      <button class="tool" id="btn-music" title="背景音乐（M）"><span class="ico" id="ico-music">♪</span><span>音乐</span></button>
+      <button class="tool" id="btn-full" title="全屏（F）"><span class="ico">⛶</span></button>
+    </div>
+  </div>
+
+  <!-- 摄像头手势预览 -->
+  <div class="handcam" id="handcam">
+    <video id="handvideo" playsinline muted autoplay></video>
+    <canvas id="handcanvas"></canvas>
+    <div class="handcam-bar">
+      <span class="handcam-dot" id="handcam-dot"></span>
+      <span id="handcam-tag">正在打开摄像头…</span>
+    </div>
+    <button class="handcam-x" id="handcam-close" title="关闭摄像头">×</button>
+  </div>
+
+  <!-- 手势说明 -->
+  <div class="gcard" id="gcard">
+    <div class="gcard-h">手势控制 <span class="gcard-h-tip">先用「✋ 手势」开摄像头</span></div>
+    <ul>
+      <li><i>✊</i><div><b>握拳</b><span>照片聚合成心形</span></div></li>
+      <li><i>🖐</i><div><b>张手</b><span>散开成满天星</span></div></li>
+      <li><i>🤏</i><div><b>捏住</b><span>打开大图，松手关闭</span></div></li>
+      <li><i>👋</i><div><b>左右移动</b><span>转动整片星空</span></div></li>
+    </ul>
+    <div class="gcard-f">
+      手势要「保持」约 0.3 秒才生效<br />
+      光线要够、手掌完整入画，抬手别太快
+    </div>
+    <button class="gcard-x" id="gcard-ok">知道了</button>
+  </div>
+
+  <!-- 设置面板 -->
+  <aside class="panel" id="panel">
+    <div class="panel-h">
+      <span>配置面板</span>
+      <button class="panel-x" id="panel-x">×</button>
+    </div>
+    <div class="panel-body">
+
+      <section>
+        <h4>文字</h4>
+        <label class="row"><span>标题</span><input id="in-title" type="text" maxlength="28" /></label>
+        <label class="row"><span>副标题</span><input id="in-sub" type="text" maxlength="20" /></label>
+        <label class="row sw"><span>显示副标题</span><input id="in-showsub" type="checkbox" class="swi" /></label>
+      </section>
+
+      <section>
+        <h4>布局模式</h4>
+        <div class="seg" id="seg-shape">
+          <button data-shape="heart">心形</button>
+          <button data-shape="text">文字</button>
+        </div>
+        <label class="row"><span>文字内容</span><input id="in-text" type="text" maxlength="8" /></label>
+        <p class="tip">聚合时照片会拼成上面的文字，比如 2026、我爱你</p>
+      </section>
+
+      <section>
+        <h4>照片 / 视频</h4>
+        <p class="tip" id="media-info">正在读取 media 目录…</p>
+        <div class="btns">
+          <button class="mini" id="btn-pick">导入本地文件</button>
+          <button class="mini" id="btn-reshuffle">换一批</button>
+        </div>
+        <div class="row sw"><span>同时展示</span><input id="in-cards" type="range" min="6" max="48" step="1" /></div>
+        <p class="tip">把文件丢进 <b>media</b> 文件夹就会自动读取，支持图片和视频，数量不限。场景里同时放几张由上面这根滑杆决定，其余用「下一张」翻看。</p>
+      </section>
+
+      <section>
+        <h4>背景音乐</h4>
+        <div class="row sw"><span>音量</span><input id="in-vol" type="range" min="0" max="100" step="1" /></div>
+        <p class="tip">把音乐命名为 <b>music/bgm.mp3</b> 放进目录即可。</p>
+      </section>
+
+      <section>
+        <h4>摄像头</h4>
+        <label class="row sw"><span>镜像</span><input id="in-mirror" type="checkbox" class="swi" /></label>
+      </section>
+
+      <section>
+        <h4>画面</h4>
+        <div class="row sw"><span>转动速度</span><input id="in-speed" type="range" min="0" max="200" step="1" /></div>
+        <div class="row sw"><span>镜头尺寸</span><input id="in-cam" type="range" min="70" max="170" step="1" /></div>
+        <div class="row sw"><span>雾化</span><input id="in-fog" type="range" min="0" max="200" step="1" /></div>
+        <div class="row sw"><span>星光</span><input id="in-stars" type="range" min="0" max="200" step="1" /></div>
+      </section>
+
+      <button class="mini wide" id="btn-reset">恢复默认</button>
+    </div>
+  </aside>
+
+  <!-- 大图 / 视频浏览 -->
+  <div class="viewer" id="viewer">
+    <button class="vnav prev" id="v-prev">‹</button>
+    <div class="viewer-stage">
+      <img id="v-img" alt="" />
+      <video id="v-video" playsinline controls loop></video>
+    </div>
+    <button class="vnav next" id="v-next">›</button>
+    <div class="viewer-info">
+      <span id="v-count">1 / 1</span>
+      <span class="viewer-tip">🤏 捏住看大图，松手关闭 · ← → 切换 · ESC 关闭</span>
+    </div>
+  </div>
+
+  <div class="intro" id="intro">
+    <div class="intro-inner">
+      <p class="intro-kicker">FOR&nbsp;&nbsp;YOU</p>
+      <h1 class="intro-title" id="intro-title">2026 Happy New Year</h1>
+      <p class="intro-sub" id="intro-sub">送给亲爱的你</p>
+      <button class="enter" id="btn-enter">开启这段回忆</button>
+      <p class="intro-tip">鼠标 / 触摸 / 摄像头手势都可以 · 手势说明见左下角「? 说明」</p>
+    </div>
+  </div>
+
+  <div class="loader" id="loader"><span></span><em id="loader-txt">正在洗照片…</em></div>
+  <div class="toast" id="toast"></div>
+
+  <!-- 直接双击 index.html（file://）时的提示 -->
+  <div class="filemode" id="filemode">
+    <b>现在是用「直接双击 index.html」打开的</b>
+    摄像头手势、视频播放、自动读文件夹都需要本地服务。
+    请关掉这个页面，双击文件夹里的 <code>启动.bat</code>，
+    它会自己把服务起好并打开正确的网址。
+    <br />
+    <button class="filemode-x" id="filemode-x">我已知晓</button>
+  </div>
+
+  <input type="file" id="picker" accept="image/*,video/*" multiple hidden />
+  <audio id="bgm" loop preload="none"></audio>
+
+  <script src="photos/demo-data.js"></script>
+  <script src="vendor/three.min.js"></script>
+  <script src="gesture.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
